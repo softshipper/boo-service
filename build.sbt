@@ -6,6 +6,7 @@ val LogbackVersion = "1.2.3"
 git.useGitDescribe := true
 dockerRepository := Some("softshipper")
 dockerBaseImage := "openjdk:11.0.5-jre"
+dockerExposedPorts := Seq(8080)
 
 lazy val root = (project in file("."))
   .settings(

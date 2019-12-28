@@ -1,13 +1,11 @@
 package com.sweetsoft
 
-import cats._
 import cats.data.Kleisli
 import cats.effect._
 import cats.implicits._
-import org.http4s.{HttpApp, HttpRoutes, Request, Response}
+import org.http4s.{Request, Response}
 import org.http4s.implicits._
 import org.http4s.server.blaze._
-import org.http4s.dsl._
 import org.http4s.client.blaze._
 import org.http4s.client._
 import org.http4s.server.Router
@@ -36,7 +34,7 @@ object Main extends IOApp {
     BlazeClientBuilder[F](global).resource.use { client =>
 
       BlazeServerBuilder[F]
-        .bindHttp(3000, "0.0.0.0")
+        .bindHttp(8080, "0.0.0.0")
         .withHttpApp(router(client, fooUrl, booUrl))
         .serve
         .compile
