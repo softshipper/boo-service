@@ -1,9 +1,8 @@
 package com.sweetsoft
 
-import org.http4s.{HttpRoutes, Response}
+import org.http4s.{Header, Headers, HttpRoutes, Response}
 import org.http4s.client.Client
 import org.http4s.dsl._
-import cats.effect._
 import fs2.text
 import cats._
 import cats.implicits._
@@ -19,10 +18,13 @@ final case class Services[F[_] : Defer : Applicative](c: Client[F], fooUrl: Stri
   extends Http4sDsl[F] {
 
   def paths(): HttpRoutes[F] = HttpRoutes.of[F] {
-    case GET -> Root / "foo" =>
-      call(fooUrl)
-    case GET -> Root / "zoo" =>
-      call(zooUrl)
+    case req@(GET -> Root / "service") =>
+      filterValidServices(req.headers) match {
+        case Some(service) =>
+          call(createUrl(service))
+        case None =>
+          BadRequest("The service does not exists!!")
+      }
   }
 
   private def call(addr: String): F[Response[F]] =
@@ -36,5 +38,18 @@ final case class Services[F[_] : Defer : Applicative](c: Client[F], fooUrl: Stri
         }
       }
     }
+
+  private def containValidServices(header: Header)
+  : Boolean =
+    header.name == "service" && (header.value == "FOO" || header.value == "ZOO")
+
+  private def filterValidServices(headers: Headers)
+  : Option[String] =
+    headers.filter(containValidServices).foldLeft(Option.empty[String]) { (_, header) =>
+      Some(header.value)
+    }
+
+  private def createUrl(serviceName: String): String =
+    s"http://${serviceName}"
 
 }
